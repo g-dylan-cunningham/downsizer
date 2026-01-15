@@ -10,7 +10,7 @@ This is the exact setup you need for PRD-001 and the next chunks.
 2. Create new project
 3. Choose:
    - Organization: your personal org
-   - Project name: `inventory-pwa-dev` (or similar)
+   - Project name: `downsizer-dev` (or similar)
    - Database password: generate and save it
    - Region: closest to you
 4. Wait for provisioning
