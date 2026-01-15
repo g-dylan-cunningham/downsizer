@@ -48,13 +48,15 @@ Vercel should auto-detect Next.js settings. No additional configuration needed.
 
 ## Troubleshooting
 
-### Build Error: "Missing Supabase environment variables"
+### Build Error: "Missing Supabase environment variables" or "Cannot read properties of null"
 
-**Cause**: Environment variables not set in Vercel.
+**Cause**: This was an issue in earlier versions where client components tried to initialize Supabase during build.
 
-**Fix**:
-1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
-2. Add all required variables listed above
+**Status**: Fixed in current version. The Supabase client is now initialized only in the browser via `useEffect`.
+
+**If still seeing this**:
+1. Ensure you're on the latest version of the code
+2. Environment variables should still be set in Vercel (they're needed at runtime)
 3. Redeploy
 
 ### Build Error: "Cannot find module '@prisma/client'"

@@ -23,10 +23,18 @@ export default function Login() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState(null);
+
+  // Initialize Supabase client only in browser
+  useEffect(() => {
+    const client = createClient();
+    setSupabase(client);
+  }, []);
 
   // Check if user is already logged in
   useEffect(() => {
+    if (!supabase) return;
+
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -34,10 +42,16 @@ export default function Login() {
       }
     };
     checkUser();
-  }, [router, supabase.auth]);
+  }, [router, supabase]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    if (!supabase) {
+      setError('Authentication service not initialized. Please refresh the page.');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
     setError('');
