@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ServiceWorkerRegistration from "./register-sw";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,12 +16,15 @@ export const metadata = {
   title: "Downsizer - Retirement Home Moving",
   description: "Staff PWA for managing retirement home moving and inventory",
   manifest: "/manifest.webmanifest",
-  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Downsizer",
   },
+};
+
+export const viewport = {
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({ children }) {
@@ -29,6 +33,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ServiceWorkerRegistration />
         {children}
       </body>
     </html>

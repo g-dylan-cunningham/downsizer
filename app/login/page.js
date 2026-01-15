@@ -31,7 +31,7 @@ export default function Login() {
       }
     };
     checkUser();
-  }, [router, supabase]);
+  }, [router, supabase.auth]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -43,7 +43,7 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/app/projects`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/app/projects`,
         },
       });
 
