@@ -14,6 +14,9 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
+// Force dynamic rendering to avoid build-time pre-rendering
+export const dynamic = 'force-dynamic';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
