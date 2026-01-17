@@ -220,6 +220,45 @@ export default function ProjectDashboard({ projectId, project, rooms }) {
           </div>
         </div>
 
+        {/* Shuffle Mode - secondary action */}
+        <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-lg p-6">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xl font-semibold text-white">
+                Shuffle Mode
+              </h3>
+              <p className="mt-1 text-sm text-green-100">
+                Move items between containers to correct packing mistakes
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <Link
+                href={`/app/projects/${projectId}/shuffle`}
+                className="px-4 py-2 bg-white text-green-600 font-medium rounded-md hover:bg-green-50 transition-colors"
+              >
+                Enter
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Supporting sections */}
         <div>
           <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-3">
