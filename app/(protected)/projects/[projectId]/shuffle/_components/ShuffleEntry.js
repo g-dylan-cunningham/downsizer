@@ -42,7 +42,7 @@ export default function ShuffleEntry({ projectId, project }) {
       console.log('[ShuffleEntry] Navigation triggered');
     } else {
       console.error('[ShuffleEntry] Failed to get container:', result.error);
-      setError(result.error || 'Container not found');
+      setError(`qrPayload ${qrPayload}` || 'Container not found');
       setLoading(false);
     }
   };
@@ -176,7 +176,7 @@ export default function ShuffleEntry({ projectId, project }) {
                   type="text"
                   placeholder="e.g., KITCHEN-BOX-0001"
                   value={containerCode}
-                  onChange={(e) => setContainerCode(e.target.value.toUpperCase())}
+                  onChange={(e) => setContainerCode(e.target.value.toLowerCase())}
                   disabled={loading}
                   className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-zinc-700 dark:text-zinc-50 disabled:opacity-50 font-mono text-lg"
                 />

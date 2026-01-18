@@ -57,7 +57,7 @@ model Room {
 /// Invariants:
 /// - code is unique per project
 /// - seq is unique per (project, room)
-/// - code format: {roomSlug}-BOX-{seq} (e.g., kitchen-BOX-0001)
+/// - code format: {roomSlug}-box-{seq} (e.g., kitchen-box-0001)
 model Container {
   id              String          @id @default(uuid()) @db.Uuid
   projectId       String          @map("project_id") @db.Uuid
