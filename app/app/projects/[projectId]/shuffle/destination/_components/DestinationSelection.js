@@ -12,12 +12,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getContainerByCode } from '@/lib/actions/shuffle';
+import { getContainerByQR, getContainerByCode } from '@/lib/actions/shuffle';
 import { createContainer } from '@/lib/actions/containers';
+import QRScanner from '../_components/QRScanner';
 
 export default function DestinationSelection({ projectId, project, rooms }) {
   const router = useRouter();
-  const [mode, setMode] = useState('manual'); // 'manual' or 'create'
+  const [mode, setMode] = useState('scan'); // 'scan', 'manual', or 'create'
   const [containerCode, setContainerCode] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,6 +51,41 @@ export default function DestinationSelection({ projectId, project, rooms }) {
     }
   }, [projectId, router, rooms]);
 
+  // Handle QR code scan
+  const handleQRScan = async (qrPayload) => {
+    if (!sourceContainer) {
+      setError('Source container data missing');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    const result = await getContainerByQR(projectId, qrPayload);
+
+    if (result.success) {
+      // Check if destination is same as source
+      if (result.container.id === sourceContainer.id) {
+        setError('Destination must be different from source');
+        setLoading(false);
+        return;
+      }
+
+      // Store destination and navigate to confirm
+      sessionStorage.setItem('shuffle_destinationContainer', JSON.stringify(result.container));
+      router.push(`/app/projects/${projectId}/shuffle/confirm`);
+    } else {
+      setError(result.error || 'Container not found');
+      setLoading(false);
+    }
+  };
+
+  // Handle QR scan error
+  const handleQRError = (errorMessage) => {
+    setError(errorMessage);
+  };
+
+  // Handle manual entry submit
   const handleManualSubmit = async (e) => {
     e.preventDefault();
 
@@ -147,8 +183,18 @@ export default function DestinationSelection({ projectId, project, rooms }) {
         {/* Mode selector */}
         <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-2 flex gap-2">
           <button
+            onClick={() => setMode('scan')}
+            className={`flex-1 px-4 py-2 rounded-md font-medium text-sm transition-colors ${
+              mode === 'scan'
+                ? 'bg-green-600 text-white'
+                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'
+            }`}
+          >
+            Scan QR
+          </button>
+          <button
             onClick={() => setMode('manual')}
-            className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+            className={`flex-1 px-4 py-2 rounded-md font-medium text-sm transition-colors ${
               mode === 'manual'
                 ? 'bg-green-600 text-white'
                 : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'
@@ -158,7 +204,7 @@ export default function DestinationSelection({ projectId, project, rooms }) {
           </button>
           <button
             onClick={() => setMode('create')}
-            className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+            className={`flex-1 px-4 py-2 rounded-md font-medium text-sm transition-colors ${
               mode === 'create'
                 ? 'bg-green-600 text-white'
                 : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'
@@ -167,6 +213,31 @@ export default function DestinationSelection({ projectId, project, rooms }) {
             Create New
           </button>
         </div>
+
+        {/* QR Scan mode */}
+        {mode === 'scan' && (
+          <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
+              Scan Destination Container QR
+            </h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+              Point your camera at the destination container's QR code
+            </p>
+
+            <QRScanner
+              onScan={handleQRScan}
+              onError={handleQRError}
+              label="Scan Destination Container"
+              color="green"
+            />
+
+            {error && (
+              <div className="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Manual entry mode */}
         {mode === 'manual' && (

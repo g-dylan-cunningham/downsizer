@@ -1,8 +1,10 @@
 /**
- * Purpose: Shuffle Mode entry component - manual container code entry.
+ * Purpose: Shuffle Mode entry component - QR scan (primary) or manual entry (fallback).
  * Exports: ShuffleEntry component
  * Invariants:
- * - Validates container code exists and belongs to project.
+ * - QR scanning is the primary method.
+ * - Manual container code entry is the fallback/optional method.
+ * - Validates container exists and belongs to project.
  * - Redirects to source container view on success.
  */
 
@@ -11,15 +13,41 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getContainerByCode } from '@/lib/actions/shuffle';
+import { getContainerByQR, getContainerByCode } from '@/lib/actions/shuffle';
+import QRScanner from './QRScanner';
 
 export default function ShuffleEntry({ projectId, project }) {
   const router = useRouter();
   const [containerCode, setContainerCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showManualEntry, setShowManualEntry] = useState(false);
 
-  const handleSubmit = async (e) => {
+  // Handle QR code scan
+  const handleQRScan = async (qrPayload) => {
+    setLoading(true);
+    setError('');
+
+    const result = await getContainerByQR(projectId, qrPayload);
+
+    if (result.success) {
+      // Navigate to source container view
+      router.push(
+        `/app/projects/${projectId}/shuffle/source/${result.container.id}`
+      );
+    } else {
+      setError(result.error || 'Container not found');
+      setLoading(false);
+    }
+  };
+
+  // Handle QR scan error
+  const handleQRError = (errorMessage) => {
+    setError(errorMessage);
+  };
+
+  // Handle manual entry submit
+  const handleManualSubmit = async (e) => {
     e.preventDefault();
 
     if (!containerCode.trim()) {
@@ -66,47 +94,100 @@ export default function ShuffleEntry({ projectId, project }) {
 
       {/* Main content */}
       <div className="max-w-2xl mx-auto p-4 space-y-6">
+        {/* Primary: QR Scanner */}
         <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-4">
-            Select Source Container
+            Scan Source Container
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
-            Enter the container code to see items and move them to another container.
+            Point your camera at the container's QR code
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <QRScanner
+            onScan={handleQRScan}
+            onError={handleQRError}
+            label="Scan Source Container QR"
+            color="green"
+          />
+
+          {error && (
+            <div className="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-zinc-300 dark:border-zinc-600"></div>
+          </div>
+          <div className="relative flex justify-center">
+            <span className="px-3 bg-zinc-50 dark:bg-zinc-900 text-sm text-zinc-500 dark:text-zinc-400">
+              Or
+            </span>
+          </div>
+        </div>
+
+        {/* Secondary: Manual Entry (Fallback) */}
+        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
+          <button
+            onClick={() => setShowManualEntry(!showManualEntry)}
+            className="w-full flex items-center justify-between text-left"
+          >
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Container Code
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., KITCHEN-BOX-0001"
-                value={containerCode}
-                onChange={(e) => setContainerCode(e.target.value.toUpperCase())}
-                disabled={loading}
-                className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-zinc-700 dark:text-zinc-50 disabled:opacity-50 font-mono text-lg"
-                autoFocus
-              />
-              <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                Format: ROOM-BOX-#### (e.g., KITCHEN-BOX-0001)
+              <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-50">
+                Manual Entry
+              </h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                Enter container code manually
               </p>
             </div>
-
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading || !containerCode.trim()}
-              className="w-full px-6 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold text-lg rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            <svg
+              className={`w-5 h-5 text-zinc-400 transition-transform ${
+                showManualEntry ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {loading ? 'Loading...' : 'View Container Items'}
-            </button>
-          </form>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          {showManualEntry && (
+            <form onSubmit={handleManualSubmit} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                  Container Code
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., KITCHEN-BOX-0001"
+                  value={containerCode}
+                  onChange={(e) => setContainerCode(e.target.value.toUpperCase())}
+                  disabled={loading}
+                  className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-zinc-700 dark:text-zinc-50 disabled:opacity-50 font-mono text-lg"
+                />
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  Format: ROOM-BOX-#### (e.g., KITCHEN-BOX-0001)
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !containerCode.trim()}
+                className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Loading...' : 'View Container Items'}
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Info card */}
@@ -115,9 +196,9 @@ export default function ShuffleEntry({ projectId, project }) {
             How Shuffle Mode Works
           </h3>
           <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
-            <li>Enter the source container code</li>
+            <li>Scan or enter the source container code</li>
             <li>Select items you want to move</li>
-            <li>Enter or scan the destination container</li>
+            <li>Scan or enter the destination container</li>
             <li>Confirm and complete the move</li>
           </ol>
         </div>
