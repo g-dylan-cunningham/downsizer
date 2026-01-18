@@ -25,17 +25,23 @@ export default function ShuffleEntry({ projectId, project }) {
 
   // Handle QR code scan
   const handleQRScan = async (qrPayload) => {
+    console.log('[ShuffleEntry] handleQRScan called with payload:', qrPayload);
     setLoading(true);
     setError('');
 
+    console.log('[ShuffleEntry] Calling getContainerByQR...');
     const result = await getContainerByQR(projectId, qrPayload);
+    console.log('[ShuffleEntry] getContainerByQR result:', result);
 
     if (result.success) {
+      console.log('[ShuffleEntry] Success! Navigating to source container:', result.container.id);
       // Navigate to source container view
       router.push(
         `/app/projects/${projectId}/shuffle/source/${result.container.id}`
       );
+      console.log('[ShuffleEntry] Navigation triggered');
     } else {
+      console.error('[ShuffleEntry] Failed to get container:', result.error);
       setError(result.error || 'Container not found');
       setLoading(false);
     }

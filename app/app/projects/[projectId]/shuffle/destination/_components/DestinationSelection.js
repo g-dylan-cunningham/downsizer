@@ -53,7 +53,10 @@ export default function DestinationSelection({ projectId, project, rooms }) {
 
   // Handle QR code scan
   const handleQRScan = async (qrPayload) => {
+    console.log('[DestinationSelection] handleQRScan called with payload:', qrPayload);
+
     if (!sourceContainer) {
+      console.error('[DestinationSelection] Source container data missing');
       setError('Source container data missing');
       return;
     }
@@ -61,20 +64,26 @@ export default function DestinationSelection({ projectId, project, rooms }) {
     setLoading(true);
     setError('');
 
+    console.log('[DestinationSelection] Calling getContainerByQR...');
     const result = await getContainerByQR(projectId, qrPayload);
+    console.log('[DestinationSelection] getContainerByQR result:', result);
 
     if (result.success) {
       // Check if destination is same as source
       if (result.container.id === sourceContainer.id) {
+        console.warn('[DestinationSelection] Destination same as source');
         setError('Destination must be different from source');
         setLoading(false);
         return;
       }
 
+      console.log('[DestinationSelection] Success! Storing destination and navigating to confirm');
       // Store destination and navigate to confirm
       sessionStorage.setItem('shuffle_destinationContainer', JSON.stringify(result.container));
       router.push(`/app/projects/${projectId}/shuffle/confirm`);
+      console.log('[DestinationSelection] Navigation triggered');
     } else {
+      console.error('[DestinationSelection] Failed to get container:', result.error);
       setError(result.error || 'Container not found');
       setLoading(false);
     }

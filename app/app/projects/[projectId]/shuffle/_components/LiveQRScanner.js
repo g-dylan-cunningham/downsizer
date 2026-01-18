@@ -22,6 +22,7 @@ export default function LiveQRScanner({
   color = 'blue',
 }) {
   const [scanning, setScanning] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
@@ -127,27 +128,50 @@ export default function LiveQRScanner({
       if (barcodes.length > 0 && !hasScannedRef.current) {
         const qrData = barcodes[0].rawValue;
 
+        console.log('[LiveQRScanner] QR detected:', qrData);
+
         // Validate QR payload format: container:{uuid}
         const containerRegex = /^container:[0-9a-fA-F-]{36}$/;
         if (containerRegex.test(qrData)) {
+          console.log('[LiveQRScanner] Valid container QR detected, processing...');
+
+          // Mark as scanned to stop loop
           hasScannedRef.current = true;
 
-          // Stop scanning
-          cleanup();
-          setScanning(false);
+          // Show processing state
+          setProcessing(true);
+          setError('');
 
           // Call success callback
           if (onScan) {
-            onScan(qrData);
+            console.log('[LiveQRScanner] Calling onScan callback with:', qrData);
+            try {
+              await onScan(qrData);
+              console.log('[LiveQRScanner] onScan callback completed');
+            } catch (err) {
+              console.error('[LiveQRScanner] onScan callback error:', err);
+              // Reset if callback fails
+              hasScannedRef.current = false;
+              setProcessing(false);
+              setError('Failed to process QR code. Please try again.');
+              return;
+            }
           }
+
+          // Cleanup after callback completes
+          cleanup();
+          setScanning(false);
+          setProcessing(false);
+
           return;
         } else {
           // Invalid format, keep scanning but show warning
+          console.log('[LiveQRScanner] Invalid QR format:', qrData);
           setError('Invalid QR code format. Expected: container:{uuid}');
         }
       }
     } catch (err) {
-      console.error('QR detection error:', err);
+      console.error('[LiveQRScanner] QR detection error:', err);
     }
 
     // Continue detection loop
@@ -242,23 +266,50 @@ export default function LiveQRScanner({
         />
 
         {/* Scanning overlay */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-64 h-64 border-4 border-white rounded-lg shadow-lg"></div>
-        </div>
+        {!processing && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-64 h-64 border-4 border-white rounded-lg shadow-lg"></div>
+          </div>
+        )}
+
+        {/* Processing overlay */}
+        {processing && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-xl">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                  Processing QR code...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Instructions */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-          <p className="text-white text-center text-sm font-medium">
-            Point camera at QR code
-          </p>
-        </div>
+        {!processing && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+            <p className="text-white text-center text-sm font-medium">
+              Point camera at QR code
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Status */}
-      <div className="flex items-center justify-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <span>Scanning...</span>
-      </div>
+      {!processing && (
+        <div className="flex items-center justify-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span>Scanning...</span>
+        </div>
+      )}
+
+      {processing && (
+        <div className="flex items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span>Validating container...</span>
+        </div>
+      )}
 
       {error && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
@@ -269,9 +320,10 @@ export default function LiveQRScanner({
       {/* Stop button */}
       <button
         onClick={stopScanning}
-        className="w-full px-6 py-3 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-900 dark:text-zinc-50 font-medium rounded-md transition-colors"
+        disabled={processing}
+        className="w-full px-6 py-3 bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-900 dark:text-zinc-50 font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Stop Scanning
+        {processing ? 'Processing...' : 'Stop Scanning'}
       </button>
     </div>
   );
