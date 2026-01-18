@@ -5,7 +5,7 @@
  * - Accessible to unauthenticated users.
  * - Sends magic link via Supabase Auth.
  * - Shows success/error messages after submission.
- * - Redirects authenticated users to /app/projects.
+ * - Redirects authenticated users to /projects.
  */
 
 'use client';
@@ -38,7 +38,7 @@ export default function Login() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        router.push('/app/projects');
+        router.push('/projects');
       }
     };
     checkUser();
@@ -60,7 +60,7 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/app/projects`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/projects`,
         },
       });
 

@@ -5,7 +5,7 @@
  * - Receives code from URL params (magic link).
  * - Exchanges code for session server-side using PKCE.
  * - Sets session in cookies for SSR auth using NextResponse pattern.
- * - Redirects to intended destination or /app/projects.
+ * - Redirects to intended destination or /projects.
  */
 
 import { createServerClient } from '@supabase/ssr';
@@ -15,7 +15,7 @@ import { cookies } from 'next/headers';
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') || '/app/projects';
+  const next = requestUrl.searchParams.get('next') || '/projects';
 
   if (!code) {
     // No code provided, redirect to login

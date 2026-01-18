@@ -2,7 +2,7 @@
   "name": "Downsizer - Retirement Home Moving",
   "short_name": "Downsizer",
   "description": "Staff PWA for managing retirement home moving and inventory",
-  "start_url": "/app/projects",
+  "start_url": "/projects",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",

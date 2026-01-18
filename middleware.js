@@ -3,7 +3,7 @@
  * Exports: middleware function and config.
  * Invariants:
  * - Runs on all routes matching the config matcher.
- * - Protected routes (/app/*) redirect to /login if unauthenticated.
+ * - Protected routes (/projects/*) redirect to /login if unauthenticated.
  * - Public routes (/login) are accessible without authentication.
  * - Refreshes Supabase session on every request.
  */
@@ -44,7 +44,7 @@ export async function middleware(request) {
   // Refresh session if expired
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/app');
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/projects');
   const isLoginRoute = request.nextUrl.pathname === '/login';
 
   // Redirect to login if accessing protected route without auth
@@ -55,7 +55,7 @@ export async function middleware(request) {
 
   // Redirect to app if accessing login while already authenticated
   if (isLoginRoute && user) {
-    const appUrl = new URL('/app/projects', request.url);
+    const appUrl = new URL('/projects', request.url);
     return NextResponse.redirect(appUrl);
   }
 

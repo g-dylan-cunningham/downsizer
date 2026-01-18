@@ -3,7 +3,7 @@
  * Exports: default Home component.
  * Invariants:
  * - Redirects unauthenticated users to /login.
- * - Redirects authenticated users to /app/projects (handled by middleware).
+ * - Redirects authenticated users to /projects (handled by middleware).
  */
 
 import { redirect } from 'next/navigation';
