@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getContainerByQR, getContainerByCode } from '@/lib/actions/shuffle';
 import { createContainer } from '@/lib/actions/containers';
-import QRScanner from '../_components/QRScanner';
+import QRScanner from '../../_components/QRScanner';
 
 export default function DestinationSelection({ projectId, project, rooms }) {
   const router = useRouter();
