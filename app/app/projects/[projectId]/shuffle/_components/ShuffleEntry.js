@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getContainerByQR, getContainerByCode } from '@/lib/actions/shuffle';
-import QRScanner from './QRScanner';
+import LiveQRScanner from './LiveQRScanner';
 
 export default function ShuffleEntry({ projectId, project }) {
   const router = useRouter();
@@ -103,7 +103,7 @@ export default function ShuffleEntry({ projectId, project }) {
             Point your camera at the container's QR code
           </p>
 
-          <QRScanner
+          <LiveQRScanner
             onScan={handleQRScan}
             onError={handleQRError}
             label="Scan Source Container QR"

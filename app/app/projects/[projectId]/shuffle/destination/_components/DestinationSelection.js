@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getContainerByQR, getContainerByCode } from '@/lib/actions/shuffle';
 import { createContainer } from '@/lib/actions/containers';
-import QRScanner from '../../_components/QRScanner';
+import LiveQRScanner from '../../_components/LiveQRScanner';
 
 export default function DestinationSelection({ projectId, project, rooms }) {
   const router = useRouter();
@@ -224,7 +224,7 @@ export default function DestinationSelection({ projectId, project, rooms }) {
               Point your camera at the destination container's QR code
             </p>
 
-            <QRScanner
+            <LiveQRScanner
               onScan={handleQRScan}
               onError={handleQRError}
               label="Scan Destination Container"
