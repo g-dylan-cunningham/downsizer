@@ -1,0 +1,181 @@
+# PRD-005: Management Mode (Project-scoped CRUD)
+
+## Status
+DESIGN LOCKED
+
+## Goal
+Introduce a project-scoped Management Mode for CRUD operations on Rooms, Containers, and Items.
+Replace the broken global top nav and remove the existing project home “Project Management” tiles.
+
+Management Mode supports:
+- Deep-linked management views (rooms/containers/items)
+- Filtering by room and/or container
+- Bulk selection + bulk deletion with confirmation
+
+## Non-Goals
+- Decision Mode / Execution Mode
+- Item reassignment between containers (Shuffle Mode owns that)
+- Multi-user collaboration/roles
+- Offline support
+- AI search
+
+---
+
+## Navigation / UX
+
+### Remove global top nav
+- Remove the top navigation bar (Projects/Rooms/Items/Containers) entirely.
+- Ensure no broken nav remains on any page.
+
+### Project home
+Route:
+app/projects/:projectId
+
+Update:
+- Keep Inventory Mode + Shuffle Mode cards
+- Add Management Mode card/button: “Management Mode”
+- Remove the existing “Project Management” buttons/tiles (Rooms/Containers/Items)
+
+### Deep-linked Management routes
+All routes are project-scoped:
+
+app/projects/:projectId/manage/rooms
+app/projects/:projectId/manage/containers
+app/projects/:projectId/manage/items
+
+
+Optional hub route:
+
+
+app/projects/:projectId/manage
+(Allowed but not required; deep links must exist.)
+
+---
+
+## Management Mode: Core Behaviors
+
+### Shared UI elements (all management pages)
+- Project context visible (project name)
+- Links or tabs to switch between:
+  - Rooms
+  - Containers
+  - Items
+- Bulk selection via checkboxes
+- Bulk actions bar appears when selections exist
+- Delete actions require confirmation dialog
+
+### Item filtering input
+Whenever a view shows an item list:
+- Provide a text input for substring filtering by title
+- Filtering may be client-side (initially) within the loaded list
+- Default behavior: case-insensitive `includes()`
+
+---
+
+## Rooms Management View
+Route:
+app/projects/:projectId/manage/rooms
+
+UI:
+- Rooms list (left or top)
+- Selecting a room shows a “Room Detail Panel”
+
+Room Detail Panel requirements:
+- Toggle control:
+  - Default: “Items”
+  - Alternate: “Containers”
+- If “Items” selected:
+  - show all items in this room (regardless of container)
+  - show item substring filter input
+- If “Containers” selected:
+  - show all containers in this room
+
+Delete Room rules:
+- Room deletion is blocked if it contains any containers
+- UI must show:
+  - “Cannot delete room: contains N containers”
+  - Provide guidance: move containers to another room first
+- Items without containers may remain in room (allowed), but since containers exist in room, room deletion should still be blocked until containers are zero.
+
+(Implementation may also block if items exist; NOT required unless you decide later.)
+
+---
+
+## Containers Management View
+Route:
+app/projects/:projectId/manage/containers
+UI:
+- Containers list with:
+  - container code
+  - room name
+  - (optional) item count
+- Selecting a container shows items in that container
+- When items are shown:
+  - include item substring filter input
+
+Delete Container rules:
+- Allowed even if container has items
+- On deletion:
+  - all items in that container are updated to `containerId = null`
+  - item roomId remains unchanged
+- Confirmation dialog must state:
+  - “Items will remain and become uncontainerized.”
+
+---
+
+## Items Management View
+Route:
+app/projects/:projectId/manage/items
+
+UI:
+- Items list (project-scoped)
+- Required fields displayed per item row:
+  - title
+  - room name
+  - container code (or “—” if null)
+  - thumbnail (if exists) optional
+- Include item substring filter input
+
+Deletion:
+- Single delete and bulk delete supported
+- Confirmation dialog required
+- If deleting items, also delete associated ItemImage rows and storage objects (if this is already your standard behavior; recommended).
+
+---
+
+## Bulk delete UX (all lists)
+- Checkbox per row
+- Select-all checkbox applies to current list page/view
+- “Delete selected” button
+- Confirmation modal includes:
+  - entity type
+  - number selected
+  - any cascading effects:
+    - container delete → items become uncontainerized
+    - room delete blocked if containers exist
+
+---
+
+## Authorization
+All operations must validate server-side:
+- project belongs to current user (ownerUserId == session.user.id)
+- room/container/item belongs to project
+
+---
+
+## Acceptance Criteria
+1) Global top nav is removed from UI.
+2) Project home no longer shows Rooms/Containers/Items tiles; Management Mode button exists.
+3) Deep links exist and work:
+   - manage/rooms, manage/containers, manage/items
+4) Rooms view:
+   - selecting room shows toggle (Items default, Containers alternate)
+   - item substring filter appears when items shown
+5) Containers view:
+   - selecting container shows items in container
+   - item substring filter appears when items shown
+6) Items view:
+   - shows project items + substring filter
+7) Delete Room is blocked if room contains containers (must move containers first).
+8) Delete Container makes items uncontainerized (containerId=null) and confirms intent.
+9) Bulk selection + bulk deletion works with confirmation dialogs.

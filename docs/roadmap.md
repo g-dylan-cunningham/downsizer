@@ -6,7 +6,7 @@ Milestone 3: Capture flow
 
 Milestone 4: Containers + QR assign
 
-Milestone 5: Search
+Milestone 5: Management mode
 
 Milestone 6: Movement events
 
